@@ -184,6 +184,8 @@ func (ts *TokenStore) paths() []*framework.Path {
 					Default:     "service",
 					Description: "The type of token to generate, service or batch",
 				},
+
+				// QXXXQ num_uses, max_num_uses
 			},
 
 			Callbacks: map[logical.Operation]framework.OperationFunc{
@@ -614,6 +616,8 @@ type tsRoleEntry struct {
 
 	// The type of token this role should issue
 	TokenType logical.TokenType `json:"token_type" mapstructure:"token_type"`
+
+	// QXXXQ Add NumUses and MaxNumUses
 }
 
 type accessorEntry struct {
@@ -2454,6 +2458,8 @@ func (ts *TokenStore) handleCreateCommon(ctx context.Context, req *logical.Reque
 		explicitMaxTTLToUse = dur
 	}
 
+	// QXXXQ Do something to te here?
+
 	var periodToUse time.Duration
 	if data.Period != "" {
 		dur, err := parseutil.ParseDurationSecond(data.Period)
@@ -2523,6 +2529,7 @@ func (ts *TokenStore) handleCreateCommon(ctx context.Context, req *logical.Reque
 				resp.AddWarning(fmt.Sprintf("Period specified both during creation call and in role; using the lesser value of %d seconds", int64(periodToUse.Seconds())))
 			}
 		}
+		// QXXXQ HERE: check role.NumUses
 	}
 
 	sysView := ts.System()
@@ -2565,7 +2572,7 @@ func (ts *TokenStore) handleCreateCommon(ctx context.Context, req *logical.Reque
 
 	// Generate the response
 	resp.Auth = &logical.Auth{
-		NumUses:     te.NumUses,
+		NumUses:     te.NumUses,		// QXXXQ numUsesToUse
 		DisplayName: te.DisplayName,
 		Policies:    te.Policies,
 		Metadata:    te.Meta,
@@ -2592,6 +2599,8 @@ func (ts *TokenStore) handleCreateCommon(ctx context.Context, req *logical.Reque
 			resp.AddWarning(fmt.Sprintf("Policy %q does not exist", p))
 		}
 	}
+
+	// QXXXQ Don't forget to update terraform vault provider
 
 	return resp, nil
 }
@@ -2956,6 +2965,7 @@ func (ts *TokenStore) tokenStoreRoleRead(ctx context.Context, req *logical.Reque
 			"path_suffix":         role.PathSuffix,
 			"renewable":           role.Renewable,
 			"token_type":          role.TokenType.String(),
+			// QXXXQ num_uses, max_num_uses
 		},
 	}
 
@@ -3060,6 +3070,8 @@ func (ts *TokenStore) tokenStoreRoleCreateUpdate(ctx context.Context, req *logic
 				int64(entry.ExplicitMaxTTL.Seconds()), int64(sysView.MaxLeaseTTL().Seconds())))
 		}
 	}
+
+	// QXXXQ num_uses, max_num_uses
 
 	pathSuffixInt, ok := data.GetOk("path_suffix")
 	if ok {
